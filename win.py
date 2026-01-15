@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 #### updated dnd.py using ai generated code for interface
+## updated on mac with github desktop
 
 import tkinter as tk
 from tkinter import IntVar, StringVar
 from tkinter import messagebox
 import tkinter.font as tkFont
 from tkinter import filedialog as fd
+import platform
+import sys
 
 
 def on_drag_start(event):
@@ -77,7 +80,7 @@ def change_widget():
 ## create name of commnand function
 def update_cmdfnc(event):
 	wig=wvar.get()
-	if (wig in wigcmd and name_entry.get() !="" ):
+	if (wig in wigcmd and name_entry.get() !="" and mode=="add"):
 		cmd_entry.delete(0,"end")
 		nstr=name_entry.get()
 		cmd_entry.insert(0,"on_" + nstr.replace(" ","_") + "_clicked")
@@ -123,6 +126,7 @@ def edit_widget():
 		clr_widget_fields()
 		name_entry.insert(0,wnlist[index])
 		cmd_entry.insert(0,cmdlst[index])
+		cmdtext.insert(1.0,proclist[index])
 		caption_entry.insert(0,w.cget("text"))
 		if (masterlist[index]!="root"):
 			mstridx=masteridx[index]
@@ -154,7 +158,10 @@ def clear_widget():
 	name_entry.focus_force()
 	global mode
 	mode="add"
-	
+
+## bind function for not allowing the user window to be closed	
+def on_closing():
+	pass
 
 # Create the target window
 def createWindow(text):
@@ -162,6 +169,10 @@ def createWindow(text):
     global mode
     win=tk.Tk()
     win.title(text)
+    
+    # Bind the close event to the on_closing function
+    win.protocol("WM_DELETE_WINDOW", on_closing)
+    
     gstr=wwentry.get()+"x"+whentry.get()+"+"+xpentry.get()+"+"+ypentry.get()
     print(gstr)
     win.geometry(gstr)
@@ -352,12 +363,22 @@ def write_widget_code():
 		f.close()
 		messagebox.showinfo("Information", f"File {filedir} has been written")
 
+def quitapp():
+	root.quit()
+	
 
-
+ost=platform.system()
+## main window definition
 root = tk.Tk()
-root.geometry("620x670+400+5")
+if ost=="Darwin":
+	root.geometry("620x670+600+5")
+else:
+	root.geometry("620x670+400+5")
 root.title("Python Drag and Drop GUI Designer")
 
+
+
+## frame at top fo screen for the widget types
 wgf = tk.LabelFrame(root,text="Widget Types",  width=600, height=120, borderwidth=3)
 wgf.place(x=4,y=1)
 
@@ -392,8 +413,10 @@ for i, widget in enumerate(widgets):
     rb = tk.Radiobutton(root, text=widget, variable=wvar, value=widget, command=change_widget)
     rb.place(x=(i % 5) * 110 + 10, y=(i // 5) * 25 + 20)
 
+## frame for middle of screen widget info
 wif=tk.LabelFrame(root,text="Widget Info", width=600, height=400, borderwidth=3)
 wif.place(x=4,y=120)
+
 #widget properties
 name_label = tk.Label(root, text="Name")
 name_label.place(x=10, y=300)
@@ -406,13 +429,8 @@ cmd_label.place(x=240, y=300)
 cmd_entry = tk.Entry(root)
 cmd_entry.place(x=380, y=300)
 
-cmdtext=tk.Text(root)
-cmdtext.place(x=240,y=330,width=305,height=150)
-
-
 master_options = ["root"]
 mastervar = StringVar(value="root")
-
 master_label=tk.Label(root, text="Master")
 master_label.place(x=10, y=330)
 master_om = tk.OptionMenu(root, mastervar, "root")
@@ -421,7 +439,7 @@ master_om.place(x=60,y=330, width=100, height=25)
 caption_label = tk.Label(root, text="Text")
 caption_label.place(x=10, y=360)
 caption_entry = tk.Entry(root)
-caption_entry.place(x=60, y=360)
+caption_entry.place(x=60, y=360, width=100)
 
 x_label = tk.Label(root, text="Xpos")
 x_label.place(x=10, y=390)
@@ -457,6 +475,9 @@ to_entry = tk.Entry(root)
 to_entry.place(x=175, y=450, width=50)
 to_entry.place_forget()
 
+## code for command = fucntion here to make last when tabbing
+cmdtext=tk.Text(root)
+cmdtext.place(x=240,y=330,width=305,height=150)
 
 button=tk.Button(root,text="Make Widget", command=createWidget)
 button.place(x=10,y=480)
@@ -472,8 +493,6 @@ clear_button.place(x=325,y=480)
 
 wf = tk.LabelFrame(root,text="Window",  width=600, height=140, borderwidth=3)
 wf.place(x=4,y=520)
-
-
 
 
 ##
@@ -509,8 +528,14 @@ ypentry=tk.Entry(root, width=4)
 ypentry.place(x=330,y=600)
 ypentry.insert(0,"10")
 
-# Create a monospace font
-monospace_font = tkFont.Font(family="Monospace", size=10)
+# Create a monospace font need to check for system type "Menlo" for mac
+if (ost=="Darwin"):
+	monospace_font = tkFont.Font(family="Menlo", size=10)
+elif (ost=="Windows"):
+	pass
+else:
+	monospace_font = tkFont.Font(family="Monospace", size=10)
+
 wigbox=tk.Listbox(root, font=monospace_font)
 wigbox.place(x=60,y=140,width=350,height=150)
 
@@ -528,7 +553,7 @@ edit_button=tk.Button(root, text="Edit", command=edit_widget)
 edit_button.place(x=415,y=140, width=125)
 edit_button.config(state="disabled")
 
-quit_button = tk.Button(root, text="Quit", command=root.quit)
+quit_button = tk.Button(root, text="Quit", command=quitapp)
 quit_button.place(x=450, y=610, width=125, height=30)
 
 # tracks number of widgets
@@ -555,4 +580,5 @@ global mode
 mode = "window"
 
 root.focus_force()
+name_entry.focus_force()
 root.mainloop()
