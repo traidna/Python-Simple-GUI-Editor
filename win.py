@@ -93,9 +93,11 @@ def update_cmdfnc(event):
 def updateWidget():
 	global ew
 	global edit_index
+	wtype = parse_widget_type(ew)
 	wnlist[edit_index]=name_entry.get()
 	cmdlst[edit_index]=cmd_entry.get()
-	ew.config(text=caption_entry.get())
+	if wtype in wigtxt:
+		ew.config(text=caption_entry.get())
 	ew.place(x=x_entry.get(), y=y_entry.get(), width=width_entry.get(), height=height_entry.get())
 	#ew.place(x=x_entry.get(), y=y_entry.get())
 	wstr=parse_widget_type(ew)+"               "
@@ -130,7 +132,9 @@ def edit_widget():
 		name_entry.insert(0,wnlist[index])
 		cmd_entry.insert(0,cmdlst[index])
 		cmdtext.insert(1.0,proclist[index])
-		caption_entry.insert(0,w.cget("text"))
+		
+		if wtype in wigtxt:
+			caption_entry.insert(0,w.cget("text"))
 		if (masterlist[index]!="root"):
 			mstridx=masteridx[index]
 			x_entry.insert(0,str(w.winfo_x()-m[mstridx].cget("borderwidth")))
@@ -184,6 +188,7 @@ def createWindow(text):
     write_button.config(state="active")
     edit_button.config(state="active")
     wtentry.config(state="disable")
+    wnentry.config(state="disable")
     wwentry.config(state="disable")
     whentry.config(state="disable")
     xpentry.config(state="disable")
@@ -313,7 +318,7 @@ def save_to_db():
 	c = conn.cursor()
 	sql="""INSERT INTO windows(winname, title, height, width, x, y)
 		VALUES(?,?,?,?,?,?)"""
-	sqldata=('NAME',win.title(),
+	sqldata=(wnentry.get(),win.title(),
 			win.winfo_height(),win.winfo_width(),
 			win.winfo_x(),win.winfo_y())
 	c.execute(sql, sqldata)
@@ -324,10 +329,14 @@ def save_to_db():
 	for i,w in enumerate(wlist):
 		fromnum="-1"
 		tonum="-1"
-		if parse_widget_type(w)=="Spinbox":
+		wtype = parse_widget_type(w)
+		if wtype=="Spinbox":
 			fromnum=str(w.cget("from"))
 			tonum=str(w.cget("to"))
-			
+		wtext=""
+		if wtype in wigtxt:
+			wtext=w.cget("text")
+				
 		sql="""INSERT INTO widgets(winid, wtype, wname, master, wtext,
 				width, height, x, y, from_num, to_num, trigger, code)
 			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"""
@@ -335,7 +344,7 @@ def save_to_db():
 				parse_widget_type(w),
 				wnlist[i],
 				masterlist[masteridx[i]],
-				w.cget("text"),
+				wtext,
 				w.winfo_width(),
 				w.winfo_height(),
 				w.winfo_x(),
@@ -414,30 +423,6 @@ def write_widget_code():
 		f.close()
 		
 		
-
-		with open("/Users/thomasraidna/PythonCode/logfile.txt","w") as lf:
-			lf.write("data dump for application\n")
-			lf.write(f"Title  = {win.title()}\n")
-			lf.write(f"X      = {win.winfo_x()}\n")
-			lf.write(f"Y      = {win.winfo_y()}\n")
-			lf.write(f"Width  = {win.winfo_width()}\n")
-			lf.write(f"Height = {win.winfo_height()}\n")
-			lf.write("done with window\nWidgets \n\n")
-			for i, w in enumerate(wlist):
-				lf.write(f"Index  = {str(i)}\n")
-				lf.write(f"Type   = {parse_widget_type(w)}\n")
-				lf.write(f"Name   = {wnlist[i]}\n")
-				lf.write(f"Master = {masterlist[masteridx[i]]}\n")
-				lf.write(f"Text   = {w.cget("text")}\n")
-				lf.write(f"X      = {w.winfo_x()}\n")
-				lf.write(f"Y      = {w.winfo_y()}\n")
-				lf.write(f"Width  = {w.winfo_width()}\n")
-				lf.write(f"Height = {w.winfo_height()}\n")
-				lf.write(f"Procnm = {cmdlst[i]}\n")
-				lf.write(f"Procedure=\n{proclist[i]}\n")
-			lf.write("\nDone with Widgets\n")
-			lf.close()
-	
 		save_to_db()
 		
 		messagebox.showinfo("Information", f"File {filedir} has been written")
@@ -580,9 +565,14 @@ wf.place(x=4,y=520)
 ##
 l=tk.Label(root, text="Window Title")
 l.place(x=10,y=545)
-wtentry=tk.Entry(root, width=30)
+wtentry=tk.Entry(root, width=12)
 wtentry.place(x=120,y=545)
 wtentry.insert(0,"Title")
+
+l=tk.Label(root, text="App Name")
+l.place(x=250,y=545)
+wnentry=tk.Entry(root,width=10)
+wnentry.place(x=330,y=545)
 
 l=tk.Label(root, text="Window Width")
 l.place(x=10,y=575)
@@ -655,7 +645,6 @@ masteridx=[]
 #list of python code for command = widgets
 proclist=[]
 # entry mode "add" or "update or "window"-need to create window
-
 global mode
 mode = "window"
 
