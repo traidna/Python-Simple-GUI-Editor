@@ -11,14 +11,10 @@ def makedb():
 		messagebox.showinfo("","Database exists")
 		return
 	
-		
-	#os.system("rm win.db")
-
 	conn=sq.connect('pywin.db')
 	cur = conn.cursor()
 
 	cur.execute("""CREATE TABLE windows(
-		id INTEGER PRIMARY_KEY,
 		winname TEXT,
 		title TEXT,
 		width TEXT,
@@ -29,7 +25,6 @@ def makedb():
 	conn.commit()
 	
 	cur.execute("""CREATE TABLE widgets(
-		id INTEGER PRIMARY_KEY,
 		winname TEXT,
 		title TEXT,
 		width TEXT,
@@ -45,4 +40,19 @@ def makedb():
 	conn.close()	
 
 	messagebox.showinfo("info","Database pywin.db has been created")
+	
+	
+def checkdb():
+	conn=sq.connect('pywin.db')
+	cur = conn.cursor()
+
+	cur.execute("SELECT *,oid FROM windows")
+	q=cur.fetchall()
+	conn.commit()
+	conn.close()
+	print("in checkdb")
+	for r in q:
+		print(str(r))
+	
+checkdb()
 	

@@ -9,7 +9,8 @@ import tkinter.font as tkFont
 from tkinter import filedialog as fd
 import platform
 import sys
-from windb import *
+import sqlite3 as sq
+from windb import makedb
 
 
 
@@ -364,7 +365,7 @@ def write_widget_code():
 		f.write("\n")
 		f.close()
 		
-		messagebox.showinfo("Information", f"File {filedir} has been written")
+		
 
 		with open("/Users/thomasraidna/PythonCode/logfile.txt","w") as lf:
 			lf.write("data dump for application\n")
@@ -388,7 +389,19 @@ def write_widget_code():
 				lf.write(f"Procedure=\n{proclist[i]}\n")
 			lf.write("\nDone with Widgets\n")
 			lf.close()
-			
+		
+		conn=sq.connect('pywin.db')
+		c = conn.cursor()
+		
+		sql="""INSERT INTO windows(winname, title, height, width, x, y)
+			VALUES(?,?,?,?,?,?)"""
+		sqldata=('NAME',win.title(),win.winfo_height(),win.winfo_width(),win.winfo_x(),win.winfo_y())
+		
+		c.execute(sql, sqldata)
+		oid=c.lastrowid
+		conn.commit()
+		conn.close()
+		messagebox.showinfo("Information", f"File {filedir} has been written\nlast index={oid} ")	
 
 
 def quitapp():
