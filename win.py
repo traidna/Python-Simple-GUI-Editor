@@ -9,8 +9,7 @@ import tkinter.font as tkFont
 from tkinter import filedialog as fd
 import platform
 import sys
-#import windb
-
+from windb import *
 
 
 
@@ -607,6 +606,8 @@ proclist=[]
 
 global mode
 mode = "window"
+
+makedb()
 
 root.focus_force()
 wtentry.focus_force()

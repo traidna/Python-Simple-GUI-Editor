@@ -1,14 +1,20 @@
 import sqlite3 as sq
 import os
+from tkinter import messagebox
+
 
 def makedb():
 
 	### check if exists and warn?
 	
+	if os.path.isfile("pywin.db"):
+		messagebox.showinfo("","Database exists")
+		return
+	
+		
+	#os.system("rm win.db")
 
-	os.system("rm win.db")
-
-	conn=sq.connect('win.db')
+	conn=sq.connect('pywin.db')
 	cur = conn.cursor()
 
 	cur.execute("""CREATE TABLE windows(
@@ -37,5 +43,6 @@ def makedb():
 		""")
 	conn.commit()
 	conn.close()	
+
+	messagebox.showinfo("info","Database pywin.db has been created")
 	
-makedb()
