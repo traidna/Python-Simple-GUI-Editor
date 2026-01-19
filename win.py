@@ -28,6 +28,37 @@ def on_drag_motion(event):
     print("pos of widget "+str(widget.winfo_x()) + "," + str(widget.winfo_y()))
 
 
+# Create the target window
+def createWindow():
+    global win
+    global mode
+    
+    text=wtentry.get()
+    win=tk.Toplevel()
+    win.title(text)
+    
+    # Bind the close event to the on_closing function
+    win.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    gstr=wwentry.get()+"x"+whentry.get()+"+"+xpentry.get()+"+"+ypentry.get()
+    print(gstr)
+    win.geometry(gstr)
+    wbutton.config(state="disabled")
+    button.config(state="active")
+    write_button.config(state="active")
+    edit_button.config(state="active")
+    wtentry.config(state="disable")
+    wnentry.config(state="disable")
+    wwentry.config(state="disable")
+    whentry.config(state="disable")
+    xpentry.config(state="disable")
+    ypentry.config(state="disable")
+    m.append(win)
+    mode="add"
+    print("master list = "+str(m))
+
+
+## clear all the widgets for the window on the entry screen
 def clrwinparms():
 	wtentry.delete(0,'end')
 	wnentry.delete(0,'end')
@@ -37,131 +68,7 @@ def clrwinparms():
 	ypentry.delete(0,'end')
 
 
-def pickwin():
-	global lb, root2
-	global winid
-	sel=lb.curselection()[0]
-	print(f'current selection {sel}')
-	print(f'data={lb.get(sel)}')
-	winid=lb.get(sel).split()[0]
-	print(f'winid={winid}')
-
-	conn=sq.connect('pywin.db')
-	c=conn.cursor()
-	oid=int(winid)
-	c.execute(f'SELECT *,oid FROM windows WHERE oid={oid}')
-	windb=c.fetchall()
-	conn.commit()
-	conn.close
-	clrwinparms()
-	windata=windb[0]
-	print(windata)
-	wtentry.insert(0,windata[1])
-	wnentry.insert(0,windata[0])
-	whentry.insert(0,windata[2])
-	wwentry.insert(0,windata[3])
-	xpentry.insert(0,windata[4])
-	ypentry.insert(0,windata[5])
-	root2.destroy()
-	
-def on_btn2_clicked():
-	global lb, root2
-	sel=lb.curselection()[0]
-	print(f'current selection {sel}')
-	print(f'data={lb.get(sel)}')
-	winid=lb.get(sel).split()[0]
-	print(f'winid={winid}')
-
-	conn=sq.connect('pywin.db')
-	c=conn.cursor()
-	c.execute(f'SELECT *,oid FROM widgets WHERE winid={winid}')
-	wins=c.fetchall()
-	conn.commit()
-	conn.close
-	for w in wins:
-		lbstr=str(w[14])+"     "
-		lbstr = lbstr[0:4]+str(w[1])
-		#lb.insert('end',lbstr)
-		print(lbstr)
-	
-	root2.destroy()
-
-def getwin():
-	global root2
-	root2=tk.Toplevel()
-	root2.title("CheckDB")
-	root2.geometry("400x600+300+10")
-	global selindex
-	l=tk.Label(root2, text="Window List")
-	l.place(x=10,y=10,height=23, width=81)
-	global lb
-	monospace_font = tkFont.Font(family="Monospace", size=10)
-	lb=tk.Listbox(root2, font=monospace_font)
-	lb.place(x=10,y=30,height=300, width=300)
-
-
-	btn2=tk.Button(root2, text="Select", command=on_btn2_clicked)
-	btn2.place(x=10,y=340,height=33, width=100)
-
-	## load data for from windows table
-	conn=sq.connect('pywin.db')
-	c=conn.cursor()
-	c.execute('SELECT *,oid FROM windows')
-	wins=c.fetchall()
-	conn.commit()
-	conn.close
-	for w in wins:
-		lbstr=str(w[6])+"     "
-		lbstr = lbstr[0:4]+str(w[1])
-		lb.insert('end',lbstr)
-
-
-	root2.focus_force()
-	root2.mainloop()
-
-	wtentry.insert(0,str(windata[1]))
-
-
-	
-	root2.destroy()
-
-
-
-def getwin():
-	global root2
-	root2=tk.Toplevel()
-	root2.title("CheckDB")
-	root2.geometry("300x400+20+10")
-	global selindex
-	l=tk.Label(root2, text="Window List")
-	l.place(x=10,y=10,height=23, width=81)
-	global lb
-	monospace_font = tkFont.Font(family="Monospace", size=10)
-	lb=tk.Listbox(root2, font=monospace_font)
-	lb.place(x=10,y=30,height=300, width=200)
-
-
-	btn2=tk.Button(root2, text="Select", command=pickwin)
-	btn2.place(x=10,y=340,height=33, width=100)
-
-	## load data for from windows table
-	conn=sq.connect('pywin.db')
-	c=conn.cursor()
-	c.execute('SELECT *,oid FROM windows')
-	wins=c.fetchall()
-	conn.commit()
-	conn.close
-	for w in wins:
-		lbstr=str(w[6])+"     "
-		lbstr = lbstr[0:4]+str(w[1])
-		lb.insert('end',lbstr)
-
-
-	root2.focus_force()
-	root2.mainloop()
-
-
-
+## clear all the widgets on the entry screen
 def clr_widget_fields():
 	# clear all the entry boxes
 	name_entry.delete(0,"end")
@@ -171,7 +78,7 @@ def clr_widget_fields():
 	height_entry.delete(0,"end")
 	width_entry.delete(0,"end")
 	cmd_entry.delete(0,"end")
-	cmdtext.delete("1.0", tk.END)
+	#cmdtext.delete("1.0", tk.END)
 	from_entry.delete(0,"end")
 	to_entry.delete(0,"end")
 	##inmainvar.set(False)
@@ -191,19 +98,18 @@ def change_widget():
 	#wigcmd is a list of widgets that can have a command=
 	if (wig in wigcmd):
 		cmd_entry.config(state="normal")
-		cmdtext.config(state="normal")
+		#cmdtext.config(state="normal")
 	else:
 		cmd_entry.delete(0,'end')
-		cmdtext.delete(1.0, 'end')
+		#cmdtext.delete(1.0, 'end')
 		cmd_entry.config(state="disable")
-		cmdtext.config(state="disable")
+		#cmdtext.config(state="disable")
 	if (wig in wigtxt):
 		caption_entry.config(state="normal")
 	else:
 		caption_entry.delete(0,'end')
 		caption_entry.config(state="disable")
-		
-		
+				
 	if(wig=="Spinbox"):
 		from_label.place(x=10, y=450)
 		from_entry.place(x=60, y=450, width=50)
@@ -225,8 +131,9 @@ def update_cmdfnc(event):
 		nstr=name_entry.get().replace(" ","_")
 		nstr='on_'+nstr+'_clicked'
 		cmd_entry.insert(0,nstr)
-		cmdtext.insert(1.0,f'def {nstr}():\n\tprint("In {nstr}()")\n')
-		
+		#cmdtext.insert(1.0,f'def {nstr}():\n\tprint("In {nstr}()")\n')
+
+	
 #Save the updated widget
 def updateWidget():
 	global ew
@@ -249,6 +156,7 @@ def updateWidget():
 	mode="add"
 	print(wnlist)
 	
+	
 # update form with widget info for widget to change
 def edit_widget():
 	print("Edit Widget")
@@ -269,7 +177,11 @@ def edit_widget():
 		clr_widget_fields()
 		name_entry.insert(0,wnlist[index])
 		cmd_entry.insert(0,cmdlst[index])
-		cmdtext.insert(1.0,proclist[index])
+		#cmdtext.insert(1.0,proclist[index])
+		
+		mastervar.set(masterlist[index])
+		wvar.set(wtype)
+		
 		if wtype in wigtxt:
 			caption_entry.insert(0,w.cget("text"))
 		if (masterlist[index]!="root"):
@@ -287,6 +199,8 @@ def edit_widget():
 			to_entry.insert(0,w.cget("to"))
 		button.config(state="disable")
 		update_button.config(state="active")
+		
+		
 		name_entry.focus_force()
 		global mode
 		mode="update"
@@ -306,40 +220,12 @@ def clear_widget():
 ## bind function for not allowing the user window to be closed	
 def on_closing():
 	pass
-
-# Create the target window
-def createWindow(text):
-    global win
-    global mode
-    win=tk.Tk()
-    win.title(text)
-    
-    # Bind the close event to the on_closing function
-    win.protocol("WM_DELETE_WINDOW", on_closing)
-    
-    gstr=wwentry.get()+"x"+whentry.get()+"+"+xpentry.get()+"+"+ypentry.get()
-    print(gstr)
-    win.geometry(gstr)
-    wbutton.config(state="disabled")
-    button.config(state="active")
-    write_button.config(state="active")
-    edit_button.config(state="active")
-    wtentry.config(state="disable")
-    wnentry.config(state="disable")
-    wwentry.config(state="disable")
-    whentry.config(state="disable")
-    xpentry.config(state="disable")
-    ypentry.config(state="disable")
-    m.append(win)
-    mode="add"
-    print("master list = "+str(m))
     
     
 # Create Widget on working window
 def createWidget():
 	#add or update mode
-    global mode
-        
+    global mode  
     if (mode!="add"):
        messagebox.showinfo("","Not in Add mode")
        return    
@@ -351,7 +237,7 @@ def createWidget():
     widgetct=widgetct+1
     caption=caption_entry.get()
     cmd=cmd_entry.get()
-    cmdcode=cmdtext.get(1.0, "end")
+    #cmdcode=cmdtext.get(1.0, "end")
     mindex=master_options.index(mastervar.get())
     print(f"master options = {master_options} master_index = {mindex}")
     global m
@@ -432,16 +318,11 @@ def createWidget():
 
     name_entry.focus_force()
     cmdlst.append(cmd)
-    proclist.append(cmdcode)
+    #proclist.append(cmdcode)
     masterlist.append(mastervar.get())
     masteridx.append(mindex)
-    print(cmdlst)
-    print(cmd)
-    print(wlist)
-    print(masterlist)
     wnlist.append(name_entry.get().replace(" ","_"))
     wname=name_entry.get()
-    print(wnlist)
     clr_widget_fields()
     mystr=parse_widget_type(w)
     mystr=mystr+"                    "
@@ -449,21 +330,36 @@ def createWidget():
     lbstr=mystr + wname
     wigbox.insert("end",lbstr)
     
-
+## save the window info to the database
 def save_to_db():
-
-	## save the window info to the database
+	global winid
+	if int(winid)>0:
+		oid=winid
 	conn=sq.connect('pywin.db')
 	c = conn.cursor()
-	sql="""INSERT INTO windows(winname, title, height, width, x, y)
+	###
+	### check adding new one or updating old
+	### 
+	## if adding new window
+	if int(winid)<1:
+		sql="""INSERT INTO windows(winname, title, height, width, x, y)
 		VALUES(?,?,?,?,?,?)"""
-	sqldata=(wnentry.get(),win.title(),
+		sqldata=(wnentry.get(),win.title(),
 			win.winfo_height(),win.winfo_width(),
 			win.winfo_x(),win.winfo_y())
-	c.execute(sql, sqldata)
-	oid=c.lastrowid
-	conn.commit()
-
+		c.execute(sql, sqldata)
+		oid=c.lastrowid
+		conn.commit()
+		
+	## if existing window delete all the widgets
+	if int(winid)>0:
+		print("*** deleting fronm widgets "+str(winid))
+		sql=f'DELETE FROM widgets WHERE winid={winid}'
+		print('SQL='+sql)
+		c.execute(sql)
+		conn.commit()
+		
+	
 	## save the widgets
 	for i,w in enumerate(wlist):
 		fromnum="-1"
@@ -475,23 +371,33 @@ def save_to_db():
 		wtext=""
 		if wtype in wigtxt:
 			wtext=w.cget("text")
+		
+		x=w.winfo_x()
+		y=w.winfo_y()
+		
+		# adjust x, y by size or boader (hard coded to 2) if not on root	
+		mstr=masterlist[masteridx[i]]
+		if mstr!="root":
+			x=x-1
+			y=y-2
+		
 				
 		sql="""INSERT INTO widgets(winid, wtype, wname, master, wtext,
-				width, height, x, y, from_num, to_num, trigger, code)
-			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"""
+				width, height, x, y, from_num, to_num, trigger)
+			VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"""
 		sqldata=(oid,
 				parse_widget_type(w),
 				wnlist[i],
-				masterlist[masteridx[i]],
+				mstr,
 				wtext,
 				w.winfo_width(),
 				w.winfo_height(),
-				w.winfo_x(),
-				w.winfo_y(),
+				x,
+				y,
 				fromnum,
 				tonum,
-				cmdlst[i],
-				proclist[i])
+				cmdlst[i])
+				##proclist[i])
 				
 		c.execute(sql, sqldata)
 		conn.commit()
@@ -501,12 +407,15 @@ def save_to_db():
 		
 
 
-
+## write the application
 def write_widget_code():
 	ctr=0
 	filedir=fd.asksaveasfilename(initialfile=f'{wnentry.get()}.py')
 	fnLabel.config(text=f"File Name = {filedir}")
 	
+	## list of the command rtns
+	rtnlist=[]
+	## create a separate file for each widget that has a command
 	with open(filedir,"w") as f:
 		# write imports and window def
 		f.write("import tkinter as tk\n")
@@ -515,16 +424,28 @@ def write_widget_code():
 		# write out the command= files and imports 
 		for index, c in enumerate(cmdlst):
 			fn=f'{wnentry.get()}_{c}.py'
+			if c!="":
+				rtnlist.append(fn)
+				
 			## only write the code if one does not exist already
-			if c!="" and proclist[index]!="" and not os.path.isfile(fn):
+			if c!="" and not os.path.isfile(fn):
 				with open(fn,"w") as fnf:
-					fnf.write(proclist[index])
+					##fnf.write(proclist[index])
+					fnf.write(f'def {c}():\n')
+					fnf.write(f'\tprint("In {fn}")\n')
 					fnf.write("\n")
 					fnf.close()
 		
 		## read files and write them in 
-		
-		
+		print("Routines to pull in\n" + str(rtnlist))
+		for rtn in rtnlist:
+			with open(rtn, 'r') as rf:
+				content = rf.read()
+				rf.close
+				f.write('\n')
+				f.write(content)
+				f.write('\n')
+				
 		f.write("root=tk.Tk()\n")
 		titlestr='root.title("' + wtentry.get() + '")'
 		f.write(titlestr)
@@ -533,20 +454,6 @@ def write_widget_code():
 		f.write(pstr)
 		f.write("\n\n")
 		
-	#	for index, c in enumerate(cmdlst):
-	#		if (c!="" and proclist[index]==""):
-	#			cstr="def " + c + "():\n"
-	#			cstr2='\tprint("in ' + c + '")\n'
-	#			f.write(cstr)
-	#			f.write(cstr2)
-	#			f.write("\n")
-	#		elif (c!="" and proclist[index]!=""):
-	#			print(f"\nfilename is {wnentry.get()}_{c}.py\n")
-	#			fn=f'{wnentry.get()}_{c}.py'
-	#			with open(fn,"w") as fnf:
-	#				fnf.write(proclist[index])
-	#				fnf.write("\n")
-	#				fnf.close()
 		
 		# write out all the widgets
 		for index,w in enumerate(wlist):
@@ -584,24 +491,123 @@ def write_widget_code():
 		messagebox.showinfo("Information", f"File {filedir} has been written")
 
 
+
+## load all the widgets for the selected window from the database
+def loadwidgets(wid):
+	conn=sq.connect('pywin.db')
+	c=conn.cursor()
+	c.execute(f'SELECT *,oid FROM widgets WHERE winid={wid}')
+	widgets=c.fetchall()
+	conn.commit()
+	conn.close()
+	
+	## loop through all the widgets for this window
+	for w in widgets:
+		print(str(w)+'\n')
+		clr_widget_fields()
+		# load all the fileds
+		name_entry.insert(0,w[2])
+		caption_entry.insert(0,w[4])
+		width_entry.insert(0,w[5])
+		height_entry.insert(0,w[6])	
+		x_entry.insert(0,w[7])
+		y_entry.insert(0,w[8])
+		from_entry.insert(0,w[9])
+		to_entry.insert(0,w[10])
+		cmd_entry.insert(0,w[11])
+		# set the type radiobutton
+		wvar.set(w[1])
+		# set the master dropdown value
+		mastervar.set(w[3])
+		#create the widget
+		createWidget()
+		
+## pick the window for those listed from the database
+def pickwin():
+	global lb
+	global winid
+	sel=lb.curselection()[0]
+	winid=lb.get(sel).split()[0]
+	widLabel.config(text=f'WID: {str(winid)}')
+	conn=sq.connect('pywin.db')
+	c=conn.cursor()
+	oid=int(winid)
+	c.execute(f'SELECT *,oid FROM windows WHERE oid={oid}')
+	windb=c.fetchall()
+	conn.commit()
+	conn.close
+	clrwinparms()
+	windata=windb[0]
+	wtentry.insert(0,windata[1])
+	wnentry.insert(0,windata[0])
+	wwentry.insert(0,windata[2])
+	whentry.insert(0,windata[3])
+	xpentry.insert(0,windata[4])
+	ypentry.insert(0,windata[5])
+	createWindow()
+	loadwidgets(winid)
+	root2.destroy()
+
+
+## load all the window stored in the database
+def getwin():
+	global root2
+	
+	#add warning that current window will be deleted
+	if isinstance(win, tk.Toplevel):
+		win.destroy()
+		
+	root2=tk.Toplevel()
+	root2.title("Load Window Application")
+	root2.geometry("300x400+75+310")
+	global selindex
+	l=tk.Label(root2, text="Window List")
+	l.place(x=10,y=10,height=23, width=81)
+	global lb
+	monospace_font = tkFont.Font(family="Monospace", size=10)
+	lb=tk.Listbox(root2, font=monospace_font)
+	lb.place(x=10,y=30,height=300, width=200)
+
+	btn2=tk.Button(root2, text="Select", command=pickwin)
+	btn2.place(x=10,y=340,height=33, width=100)
+
+	## load data for from windows table
+	conn=sq.connect('pywin.db')
+	c=conn.cursor()
+	c.execute('SELECT *,oid FROM windows')
+	wins=c.fetchall()
+	conn.commit()
+	conn.close
+	for w in wins:
+		lbstr=str(w[6])+"     "
+		lbstr = lbstr[0:4]+str(w[1])
+		lb.insert('end',lbstr)
+
+	root2.focus_force()
+
+
+## quit the app destry the open windows
 def quitapp():
+	
 	print(str(type(win)))
-	if isinstance(win,tk.Tk):
+	if isinstance(win,tk.Toplevel):
 		win.destroy()
 	root.destroy()
 	#root.quit()
-	
+
+
+###### start of main code
 global winid
 winid=-1
 
 ost=platform.system()
-## main window definition
+## main window definition  Darwin is Macos
 root = tk.Tk()
 if ost=="Darwin":
 	root.geometry("620x670+600+5")
 else:
 	root.geometry("620x670+400+5")
-root.title("Python Drag and Drop GUI Designer")
+root.title("Python/Tkinter GUI Designer")
 
 
 
@@ -634,6 +640,7 @@ wigtxt = [
 	"Button", "Label","Checkbutton", "Radiobutton", "LabelFrame"
 ] 
 
+## StringVar for which widget type radio button
 wvar = tk.StringVar(value=widgets[0])
 
 for i, widget in enumerate(widgets):
@@ -702,12 +709,6 @@ to_entry = tk.Entry(root)
 to_entry.place(x=175, y=450, width=50)
 to_entry.place_forget()
 
-
-cmdtext=tk.Text(root)
-cmdtext.place(x=240,y=330,width=305,height=150)
-
-
-
 button=tk.Button(root,text="Make Widget", command=createWidget)
 button.place(x=10,y=480)
 button.config(state="disabled")
@@ -774,10 +775,14 @@ else:
 wigbox=tk.Listbox(root, font=monospace_font)
 wigbox.place(x=60,y=140,width=350,height=150)
 
-fnLabel=tk.Label(root,text="File name: ")
-fnLabel.place(x=10, y=625)
+widLabel=tk.Label(root, text="WID :")
+widLabel.place(x=10, y=625)
 
-wbutton=tk.Button(root,text="MakeWin", command= lambda: createWindow(wtentry.get()))
+fnLabel=tk.Label(root,text="File name: ")
+fnLabel.place(x=120, y=625)
+
+
+wbutton=tk.Button(root,text="MakeWin", command=createWindow)
 wbutton.place(x=430,y=540,width=75, height=30)
 
 lwbutton=tk.Button(root, text="LoadWin", command = getwin)
@@ -809,16 +814,19 @@ cmdlst=[]
 # holds the name of the master for this widget
 masterlist=[]
 masteridx=[]
-#list of python code for command = widgets
-proclist=[]
-# list of where to put the code for command if needed, if true in main 
-## if False in own file
-##inmainlist=[]
 
-# entry mode "add" or "update or "window"-need to create window
+
+# entry mode "add" or "update or "window", "old"-need to create window
+# window - no window defined yet
+# add - window - but new application
+# update - editing widgets
+# old - loaded existing app from the data base
+
 global mode
 mode = "window"
+## win is the variable for the tkinter application window
 win=""
+## call make database, if database exists it will just return
 makedb()
 
 root.focus_force()
