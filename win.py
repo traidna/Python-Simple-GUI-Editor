@@ -11,7 +11,7 @@ import platform
 import sys
 import os
 import sqlite3 as sq
-from windb import makedb, checkdb
+##from windb import makedb, checkdb
 
 
 
@@ -26,6 +26,48 @@ def on_drag_motion(event):
     y = widget.winfo_y() - widget.startY + event.y
     widget.place(x=x, y=y)
     print("pos of widget "+str(widget.winfo_x()) + "," + str(widget.winfo_y()))
+
+
+## create the database - only needs to happen once or if a reset on the db
+def makedb():
+	
+	if os.path.isfile("pywin.db"):
+		messagebox.showinfo("","Database exists")
+		return
+	
+	conn=sq.connect('pywin.db')
+	cur = conn.cursor()
+
+	cur.execute("""CREATE TABLE windows(
+		winname TEXT,
+		title TEXT,
+		width TEXT,
+		height TEXT,
+		x TEXT,
+		y TEXT)
+		""")
+	conn.commit()
+
+	cur.execute("""CREATE TABLE widgets(
+		winid TEXT,
+		wtype TEXT,
+		wname TEXT,
+		master TEXT,
+		wtext TEXT,
+		width TEXT,
+		height TEXT,
+		x TEXT,
+		y TEXT,
+		from_num TEXT,
+		to_num TEXT,
+		trigger TEXT,
+		code, TEXT)
+		""")
+	conn.commit()
+	conn.close()	
+
+	messagebox.showinfo("info","Database pywin.db has been created")
+
 
 
 # Create the target window
@@ -402,7 +444,7 @@ def save_to_db():
 		conn.commit()
 		
 	conn.close()
-	##checkdb()
+
 		
 
 
@@ -830,6 +872,7 @@ makedb()
 
 root.focus_force()
 wtentry.focus_force()
+messagebox.showinfo("", str(os.getcwd()))
 
 root.mainloop()
 
