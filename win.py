@@ -124,6 +124,8 @@ def clr_widget_fields():
 	cmd_entry.delete(0,"end")
 	from_entry.delete(0,"end")
 	to_entry.delete(0,"end")
+	bgc_frame.config(bg=dfltbg)
+	
 
 
 ## pass in a widget and return a string of widget type parsed
@@ -233,23 +235,26 @@ def edit_widget():
 			x_entry.insert(0,w.winfo_x())
 			y_entry.insert(0,w.winfo_y())
 			
+			if (wtype=="Button"):
+				bgc_frame.config(bg=w['bg'])
+			
+			
 		width_entry.insert(0,w.winfo_width())
 		height_entry.insert(0,w.winfo_height())
 		if (wtype=="Spinbox"):
 			from_entry.insert(0,w.cget("from"))
 			to_entry.insert(0,w.cget("to"))
 		if (wtype=="Button"):
-            global bgcolor
-            w['bg']=bgcolor
+			global bgcolor
+			w['bg']=bgcolor
 
-        button.config(state="disable")
+		button.config(state="disable")
 		update_button.config(state="active")
 		
 		name_entry.focus_force()
 		#global mode
 		#mode="update"
 		update_mode("update")
-		
 		print(str(type(w)))
 
 
@@ -263,7 +268,7 @@ def clear_widget():
 	#global mode
 	#mode="add"
 	update_mode("add")
-	
+
 
 ## bind function for not allowing the user window to be closed	
 def on_closing():
@@ -646,9 +651,11 @@ def getwin():
 	root2.focus_force()
 
 def choose_bg_color():
-    global bgcolor
-    bgcolor = colorchooser.askcolor(title="Choose Color")
-    bgcolor = bgcolor[1]
+	global bgcolor
+	bgcolor = colorchooser.askcolor(title="Choose Color", color=bgcolor)
+	bgcolor = bgcolor[1]
+	bgc_frame.config(bg=bgcolor)
+    
 
 
 
@@ -747,8 +754,8 @@ wigtxt = [
 wvar = tk.StringVar(value=widgets[0])
 
 for i, widget in enumerate(widgets):
-    rb = tk.Radiobutton(root, text=widget, variable=wvar, value=widget, command=change_widget)
-    rb.place(x=(i % 5) * 110 + 10, y=(i // 5) * 25 + 20)
+	rb = tk.Radiobutton(root, text=widget, variable=wvar, value=widget, command=change_widget)
+	rb.place(x=(i % 5) * 110 + 10, y=(i // 5) * 25 + 20)
 
 ## frame for middle of screen widget info
 wif=tk.LabelFrame(root,text="Widget Info", width=600, height=400, borderwidth=3)
@@ -788,11 +795,12 @@ y_label.place(x=130, y=390)
 y_entry = tk.Entry(root)
 y_entry.place(x=175, y=390, width=50)
 
-bgc_btn = tk.Button(root, text="BG color", command=choose_bg_color)
-bgc_btn.place(x=275, y=385)
+bgc_btn = tk.Button(root, text="BG col", command=choose_bg_color)
+bgc_btn.place(x=235, y=390, width=75, height=25)
+bgc_frame=tk.Frame(root, borderwidth=2, relief="groove")
+bgc_frame.place(x=315,y=392, height=22, width=25)
 bgcolor = bgc_btn['bg']
-
-
+dfltbg = bgcolor
 
 width_label = tk.Label(root, text="Width")
 width_label.place(x=10, y=420)
@@ -803,6 +811,14 @@ height_label = tk.Label(root, text="Height")
 height_label.place(x=130, y=420)
 height_entry = tk.Entry(root)
 height_entry.place(x=175, y=420, width=50)
+
+
+fgc_btn = tk.Button(root, text="FG col", command=choose_bg_color)
+fgc_btn.place(x=235, y=420, width=75, height=25)
+fgc_frame=tk.Frame(root, borderwidth=2, relief="groove")
+fgc_frame.place(x=315,y=422, height=22, width=25)
+fgcolor = fgc_btn['fg']
+
 
 from_label = tk.Label(root, text="From")
 from_label.place(x=10, y=450)
