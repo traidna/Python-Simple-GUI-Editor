@@ -76,7 +76,7 @@ def makedb():
 def createWindow():
     global win
     global mode
-    
+    global m
     text=wtentry.get()
     win=tk.Toplevel()
     win.title(text)
@@ -281,9 +281,10 @@ def createWidget():
     caption=caption_entry.get()
     cmd=cmd_entry.get()
     #cmdcode=cmdtext.get(1.0, "end")
-    mindex=master_options.index(mastervar.get())
-    print(f"master options = {master_options} master_index = {mindex}")
     global m
+    mindex=master_options.index(mastervar.get())
+    print(f"master options = {master_options} master_index = {mindex} m[mindex]={m[mindex]}")
+
     #Label
     if (wvar.get() == "Label"):
         w=tk.Label(m[mindex], text = caption)
@@ -656,9 +657,10 @@ def edit_window():
 
 
 def reset_window():
+	global wlist, wnlist, masterlist, masteridx
 	widgetct=-1
 	mastct=1
-
+	global win, m
 	#holds list of tkinter widgets that are masters
 	m=[]
 	# holds list of the widgets
@@ -688,7 +690,8 @@ def reset_window():
 	update_mode("window")
 	global winid
 	winid=-1
-	
+	win=""
+	widLabel.config(text=f'WID: {str(winid)}')
 
 ###########################################
 ######
@@ -907,6 +910,8 @@ quit_button.place(x=520, y=610, width=75, height=30)
 widgetct=-1
 mastct=1
 
+global m, wlist, wnlist, cmdlst, masterlist, masteridx
+
 #holds list of tkinter widgets that are masters
 m=[]
 # holds list of the widgets
@@ -917,6 +922,7 @@ wnlist=[]
 cmdlst=[]
 # holds the name of the master for this widget
 masterlist=[]
+# index to the mastlist[] for this widget
 masteridx=[]
 
 
@@ -931,6 +937,7 @@ masteridx=[]
 update_mode("window")
 
 ## win is the variable for the tkinter application window
+
 win=""
 ## call make database, if database exists it will just return
 makedb()
