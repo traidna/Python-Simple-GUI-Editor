@@ -1,6 +1,6 @@
-#!/usr/bin/python3
-####!/opt/homebrew/opt/python@3.13/bin/python3
+#!/opt/homebrew/opt/python@3.13/bin/python3
 ## above for my mac
+###!/usr/bin/python3
 ### linux raspterry pi #!/usr/bin/python3
 
 import tkinter as tk
@@ -66,7 +66,8 @@ def makedb():
 		from_num TEXT,
 		to_num TEXT,
 		trigger TEXT,
-		code, TEXT)
+		fgcolor TEXT,
+		bgcolor TEXT)
 		""")
 	conn.commit()
 	conn.close()	
@@ -125,7 +126,7 @@ def clr_widget_fields():
 	from_entry.delete(0,"end")
 	to_entry.delete(0,"end")
 	bgc_frame.config(bg=dfltbg)
-	
+	fgc_frame.config(bg=dfltfg)
 
 
 ## pass in a widget and return a string of widget type parsed
@@ -154,17 +155,25 @@ def change_widget():
 		caption_entry.delete(0,'end')
 		caption_entry.config(state="disable")
 				
-	if(wig=="Spinbox"):
-		from_label.place(x=10, y=450)
-		from_entry.place(x=60, y=450, width=50)
-		to_label.place(x=130, y=450)
-		to_entry.place(x=175, y=450, width=50)
-
+	if(wig=="Spinbox" or wig=="Scale"):
+		#from_label.place(x=10, y=450)
+		#from_entry.place(x=60, y=450, width=50)
+		#to_label.place(x=130, y=450)
+		#to_entry.place(x=175, y=450, width=50)
+		to_entry.config(state='normal')
+		from_entry.config(state='normal')
+		from_entry.delete(0,'end')
+		from_entry.insert(0,"0")
+		to_entry.delete(0,'end')
+		to_entry.insert(0,"100")
 	else:
-		from_label.place_forget()
-		from_entry.place_forget()
-		to_label.place_forget()
-		to_entry.place_forget()
+		##from_label.place_forget()
+		##from_entry.place_forget()
+		##to_label.place_forget()
+		##to_entry.place_forget()
+		from_entry.config(state="disable")
+		to_entry.config(state="disable")
+
 
 
 ## create name of commnand function
@@ -174,18 +183,36 @@ def update_cmdfnc(event):
 		cmd_entry.delete(0,"end")
 		nstr=name_entry.get().replace(" ","_")
 		nstr='on_'+nstr+'_clicked'
+		if wig=='Scale':
+			nstr = nstr + '(event)'
+		else:
+			nstr=nstr + ')'
+			
 		cmd_entry.insert(0,nstr)
 
 
-#Save the updated widget
+#Save the updated widget after selecting edit
 def updateWidget():
 	global ew
 	global edit_index
 	wtype = parse_widget_type(ew)
 	wnlist[edit_index]=name_entry.get()
 	cmdlst[edit_index]=cmd_entry.get()
+	
+	## udpate fg an bg colors
+	if wtype in wigcol:
+		ew.config(fg=fgc_frame['bg'])
+		if (wtype!="Frame"):
+			ew.config(bg=bgc_frame['bg'])
+		
+	## update text fields
 	if wtype in wigtxt:
 		ew.config(text=caption_entry.get())
+	
+	if wtype in wigtofrom:
+		ew.config(from_=from_entry.get())
+		ew.config(to=to_entry.get())
+	
 	ew.place(x=x_entry.get(), y=y_entry.get(), width=width_entry.get(), height=height_entry.get())
 	wstr=parse_widget_type(ew)+"               "
 	wstr=wstr[0:15]+wnlist[edit_index]
@@ -201,7 +228,7 @@ def updateWidget():
 	print(wnlist)
 	
 	
-# update form with widget info for widget to change
+# update form with widget info for widget to change, load fields for selected widget
 def edit_widget():
 	print("Edit Widget")
 	selected_index=wigbox.curselection()
@@ -235,27 +262,23 @@ def edit_widget():
 			x_entry.insert(0,w.winfo_x())
 			y_entry.insert(0,w.winfo_y())
 			
-			if (wtype=="Button"):
-				bgc_frame.config(bg=w['bg'])
-			
-			
+		if (wtype in wigcol):
+			bgc_frame.config(bg=w['bg'])
+			if (wtype!="Frame"):
+				fgc_frame.config(bg=w['fg'])
+
 		width_entry.insert(0,w.winfo_width())
 		height_entry.insert(0,w.winfo_height())
-		if (wtype=="Spinbox"):
+		
+		if (wtype=="Spinbox" or wtype=="Scale"):
 			from_entry.insert(0,w.cget("from"))
 			to_entry.insert(0,w.cget("to"))
-		if (wtype=="Button"):
-			global bgcolor
-			w['bg']=bgcolor
-
+		
 		button.config(state="disable")
 		update_button.config(state="active")
 		
 		name_entry.focus_force()
-		#global mode
-		#mode="update"
 		update_mode("update")
-		print(str(type(w)))
 
 
 # clear all widget fields and put in "add" mode 
@@ -265,8 +288,6 @@ def clear_widget():
 	update_button.config(state="disable")
 	button.config(state="active")
 	name_entry.focus_force()
-	#global mode
-	#mode="add"
 	update_mode("add")
 
 
@@ -287,18 +308,20 @@ def createWidget():
         return
        
     global widgetct
+    global m
     widgetct=widgetct+1
     caption=caption_entry.get()
     cmd=cmd_entry.get()
-    #cmdcode=cmdtext.get(1.0, "end")
-    global m, bgcolor
-    
+
+    fgcol=fgc_frame['bg']
+    bgcol=bgc_frame['bg']
+   
     mindex=master_options.index(mastervar.get())
     print(f"master options = {master_options} master_index = {mindex} m[mindex]={m[mindex]}")
 
     #Label
     if (wvar.get() == "Label"):
-        w=tk.Label(m[mindex], text = caption)
+        w=tk.Label(m[mindex], text = caption, bg=bgcol, fg=fgcol)
         w.place(x=x_entry.get(), y=y_entry.get(), width=width_entry.get(), height=height_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
@@ -306,22 +329,23 @@ def createWidget():
         print(f"x={w.winfo_x()}")            
     # Button
     elif (wvar.get() == "Button"):
-        w=tk.Button(m[mindex], text=caption, bg=bgcolor)
+        w=tk.Button(m[mindex], text=caption, bg=bgcol, fg=fgcol)
         w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
+        w.config(bg=bgcolor)
         wlist.append(w)
     # Entry Box
     elif (wvar.get() == "Entry"):
-        w=tk.Entry(m[mindex])
+        w=tk.Entry(m[mindex], bg=bgol, fg=fgcol)
         w.insert(0,caption)
         w.place(x=x_entry.get(), y=y_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
-    # Entry Box
+    # Text Box
     elif (wvar.get() == "Text"):
-        w=tk.Text(m[mindex])
+        w=tk.Text(m[mindex], bg=bgcol, fg=fgcol)
         w.insert("1.0",caption)
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
@@ -329,7 +353,7 @@ def createWidget():
         wlist.append(w)
     # Checkbutton Box
     elif (wvar.get() == "Checkbutton"):
-        w=tk.Checkbutton(m[mindex],text=caption)
+        w=tk.Checkbutton(m[mindex],text=caption, bg=bgcol, fg=fgcol)
         w.place(x=x_entry.get(), y=y_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
@@ -340,17 +364,24 @@ def createWidget():
         w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
-        wlist.append(w)    
+        wlist.append(w)   
+    #scale
+    elif (wvar.get() == "Scale"):
+        w=tk.Scale(m[mindex], bg=bgcol, fg=fgcol, from_ = from_entry.get(), to=to_entry.get(), orient = tk.HORIZONTAL)
+        w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
+        w.bind("<ButtonPress-1>", on_drag_start)
+        w.bind("<B1-Motion>", on_drag_motion)
+        wlist.append(w)     
     # ListBox
     elif (wvar.get() == "Listbox"):
-        w=tk.Listbox(m[mindex])
+        w=tk.Listbox(m[mindex], bg=bgcol, fg=fgcol)
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
     # LabelFrame
     elif (wvar.get() == "LabelFrame"):
-        w=tk.LabelFrame(m[mindex], text=caption, borderwidth=2)
+        w=tk.LabelFrame(m[mindex], text=caption, bg=bgcol, fg=fgcol, borderwidth=2)
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
@@ -361,7 +392,7 @@ def createWidget():
         master_om['menu'].add_command(label=opt, command=tk._setit(mastervar, opt))
     # Frame
     elif (wvar.get() == "Frame"):
-        w=tk.Frame(m[mindex], borderwidth=2, relief=tk.GROOVE)
+        w=tk.Frame(m[mindex], bg=bgcol, borderwidth=2, relief=tk.GROOVE)
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
@@ -432,12 +463,22 @@ def save_to_db():
 		fromnum="-1"
 		tonum="-1"
 		wtype = parse_widget_type(w)
-		if wtype=="Spinbox":
+		
+		if wtype in wigtofrom:
 			fromnum=str(w.cget("from"))
 			tonum=str(w.cget("to"))
+		
 		wtext=""
 		if wtype in wigtxt:
 			wtext=w.cget("text")
+		
+		fgc="" ## if frame no fg property so set default
+		bgc=""
+		
+		if wtype in wigcol:
+			if wtype!="Frame":
+				 fgc=str(w.cget("fg"))
+			bgc=str(w.cget("bg"))
 		
 		x=w.winfo_x()
 		y=w.winfo_y()
@@ -451,8 +492,8 @@ def save_to_db():
 		print(f'name={wnlist[i]}   width={w.winfo_width()}')
 		
 		sql="""INSERT INTO widgets(winid, wtype, wname, master, wtext,
-				width, height, x, y, from_num, to_num, trigger)
-			VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"""
+				width, height, x, y, from_num, to_num, trigger, fgcolor, bgcolor)
+			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
 		sqldata=(oid,
 				parse_widget_type(w),
 				wnlist[i],
@@ -464,8 +505,10 @@ def save_to_db():
 				y,
 				fromnum,
 				tonum,
-				cmdlst[i])
-				##proclist[i])
+				cmdlst[i],
+				fgc,
+				bgc
+				)
 				
 		c.execute(sql, sqldata)
 		conn.commit()
@@ -492,14 +535,13 @@ def write_widget_code():
 				rtnlist.append(fn)
 				
 			## only write the code if one does not exist already
-			if c!="" and not os.path.isfile(fn):
+			if c!="" and not os.path.isfile(fn): 
 				with open(fn,"w") as fnf:
-					##fnf.write(proclist[index])
-					fnf.write(f'def {c}():\n')
+					fnf.write(f'def {c}:\n')
 					fnf.write(f'\tprint("In {fn}")\n')
 					fnf.write("\n")
 					fnf.close()
-		
+
 		## read files for signals and write them in 
 		print("Routines to pull in\n" + str(rtnlist))
 		for rtn in rtnlist:
@@ -525,16 +567,31 @@ def write_widget_code():
 			wstr=str(type(w)).split(".")[1]
 			wstr=wstr.split("'")[0]
 			mstr=masterlist[index]
-				
-			if (wstr!="Listbox" and wstr!="Text" and wstr!="Frame"):
+			
+			## special cases fro listbox, Text and Frame
+			##if (wstr!="Listbox" and wstr!="Text" and wstr!="Frame"):
+			if wstr in wigtxt:
 				pstr = wnlist[ctr] + '=tk.' + wstr+'('+mstr+', text="' + w.cget('text') +'"' 
 			else:
 				 pstr = wnlist[ctr] + '=tk.' + wstr+'('+mstr
-			if (wstr=="Frame"):
+			
+			if (wstr=="Frame" or wstr=="Labelframe"):
 				pstr=pstr+', borderwidth=2, relief="groove"'
+			
+			if wstr in wigtofrom:
+				pstr = pstr + ', from_=' + str(w.cget('from')) + ', to=' + str(w.cget('to'))
+				if wstr=="Scale":
+					pstr = pstr + ', orient= tk.HORIZONTAL'
+				
+			## write color info
+			if wstr in wigcol:
+				pstr = pstr + ', bg="' + w["bg"] + '"'
+				if wstr!="Frame":
+					pstr = pstr + ', fg="' + w["fg"] + '"'
+				
 			if (cmdlst[index]!=""):
-				pstr=pstr+", command="+str(cmdlst[index])
-			pstr=pstr + ')'
+				pstr=pstr+", command="+str(cmdlst[index].replace('event','').replace('()',""))
+			pstr=pstr + ' )'
 			print(pstr)
 			p2str = wnlist[ctr] + ".place(x=" + str(w.winfo_x()) + ",y=" + str(w.winfo_y())+ ","
 			p2str= p2str + "height="+str(w.winfo_height()) + ", width="+str(w.winfo_width()) + ")"
@@ -544,6 +601,8 @@ def write_widget_code():
 			f.write("\n")
 			f.write(p2str)
 			f.write("\n\n")
+
+
 
 		f.write("root.focus_force()\n")
 		f.write("root.mainloop()")
@@ -556,6 +615,7 @@ def write_widget_code():
 
 ## load all the widgets for the selected window from the database
 def loadwidgets(wid):
+	## load from database
 	conn=sq.connect('pywin.db')
 	c=conn.cursor()
 	c.execute(f'SELECT *,oid FROM widgets WHERE winid={wid}')
@@ -577,7 +637,9 @@ def loadwidgets(wid):
 		from_entry.insert(0,w[9])
 		to_entry.insert(0,w[10])
 		cmd_entry.insert(0,w[11])
-		# set the type radiobutton
+		fgc_frame.config(bg=w[12])
+		bgc_frame.config(bg=w[13])
+		# set the widget type radiobutton
 		wvar.set(w[1])
 		# set the master dropdown value
 		mastervar.set(w[3])
@@ -622,7 +684,7 @@ def getwin():
 		
 	root2=tk.Toplevel()
 	root2.title("Load Window Application")
-	root2.geometry("300x400+75+310")
+	root2.geometry("220x400+75+310")
 	
 	global selindex
 	l=tk.Label(root2, text="Window List")
@@ -655,8 +717,13 @@ def choose_bg_color():
 	bgcolor = colorchooser.askcolor(title="Choose Color", color=bgcolor)
 	bgcolor = bgcolor[1]
 	bgc_frame.config(bg=bgcolor)
-    
 
+
+def choose_fg_color():
+	global fgcolor
+	fgcolor = colorchooser.askcolor(title="Choose Color", color=fgcolor)
+	fgcolor = fgcolor[1]
+	fgc_frame.config(bg=fgcolor)
 
 
 ## quit the app destry the open windows
@@ -706,11 +773,13 @@ def reset_window():
 	wwentry.delete(0,'end')
 	xpentry.delete(0,'end')
 	ypentry.delete(0,'end')
+	clr_widget_fields()
 	update_mode("window")
 	global winid
 	winid=-1
 	win=""
 	widLabel.config(text=f'WID: {str(winid)}')
+
 
 ###########################################
 ######
@@ -719,7 +788,8 @@ def reset_window():
 ###########################################
 global winid
 winid=-1
-global bgcolor
+global bgcolor, fgcolor
+global dfltbg, dfltfg
 
 ost=platform.system()
 ## main window definition  Darwin is Macos
@@ -749,6 +819,14 @@ wigcmd = [
 wigtxt = [
 	"Button", "Label","Checkbutton", "Radiobutton", "LabelFrame"
 ] 
+
+#list of widgets that can use color
+wigcol =[
+	"Button", "Label","Checkbutton", "Radiobutton", "LabelFrame",
+	"Frame", "Listbox", "Canvas", "Scrollbar", "Text", "Scale"
+]
+# list of widgets that use to and from_
+wigtofrom = [ "Spinbox", "Scale"]
 
 ## StringVar for which widget type radio button
 wvar = tk.StringVar(value=widgets[0])
@@ -813,26 +891,28 @@ height_entry = tk.Entry(root)
 height_entry.place(x=175, y=420, width=50)
 
 
-fgc_btn = tk.Button(root, text="FG col", command=choose_bg_color)
+fgc_btn = tk.Button(root, text="FG col", command=choose_fg_color)
 fgc_btn.place(x=235, y=420, width=75, height=25)
 fgc_frame=tk.Frame(root, borderwidth=2, relief="groove")
 fgc_frame.place(x=315,y=422, height=22, width=25)
 fgcolor = fgc_btn['fg']
+dfltfg=fgcolor
+fgc_frame['bg']=dfltfg
 
 
 from_label = tk.Label(root, text="From")
 from_label.place(x=10, y=450)
-from_label.place_forget()
+#from_label.place_forget()
 from_entry = tk.Entry(root)
 from_entry.place(x=60, y=450, width=50)
-from_entry.place_forget()
+#from_entry.place_forget()
 
 to_label = tk.Label(root, text="To")
 to_label.place(x=130, y=450)
-to_label.place_forget()
+#to_label.place_forget()
 to_entry = tk.Entry(root)
 to_entry.place(x=175, y=450, width=50)
-to_entry.place_forget()
+#to_entry.place_forget()
 
 button=tk.Button(root,text="Make Widget", command=createWidget)
 button.place(x=10,y=480)
@@ -929,14 +1009,9 @@ resetwin_button = tk.Button(root, text="Reset",command=reset_window)
 resetwin_button.place(x=520, y=575, width=75, height=30)
 resetwin_button.config(state="disabled")
 
-
 write_button = tk.Button(root, text="Save", command=write_widget_code)
 write_button.place(x=430, y=610, width=75, height =30)
 write_button.config(state="disabled")
-
-
-
-
 
 quit_button = tk.Button(root, text="Quit", command=quitapp)
 quit_button.place(x=520, y=610, width=75, height=30)
