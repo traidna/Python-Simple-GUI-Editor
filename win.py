@@ -337,7 +337,7 @@ def createWidget():
     elif (wvar.get() == "Entry"):
         w=tk.Entry(m[mindex], bg=bgcol, fg=fgcol)
         w.insert(0,caption)
-        w.place(x=x_entry.get(), y=y_entry.get())
+        w.place(x=x_entry.get(), y=y_entry.get(), width=width_entry.get(), height=height_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
@@ -758,7 +758,8 @@ def edit_window():
 ## quit the current window and clear everything so a new window can be made
 
 def reset_window():
-	global wlist, wnlist, masterlist, masteridx
+	global wlist, wnlist, masterlist, masteridx, cmdlst
+	global widgetct, mastct
 	widgetct=-1
 	mastct=1
 	global win, m
@@ -773,6 +774,8 @@ def reset_window():
 	# holds the name of the master for this widget
 	masterlist=[]
 	masteridx=[]
+	master_om['menu'].delete(1,'end')
+	mastervar.set("root")
 
 	wigbox.delete(0,tk.END)
 	win.destroy()
@@ -790,13 +793,25 @@ def reset_window():
 	xpentry.delete(0,'end')
 	ypentry.delete(0,'end')
 	clr_widget_fields()
+	
 	update_mode("window")
 
 	global winid
 	winid=-1
 	win=""
 	widLabel.config(text=f'WID: {str(winid)}')
-
+	
+	#print("Local Variables:")
+	# for name, value in locals().copy().items():
+		# # Optional: filter out built-in/internal variables if needed
+		# if not name.startswith('__'): 
+			# print(f"{name}: {value}, Type: {type(value)}")
+	
+	# print("Global Variables:")
+	# for name, value in globals().copy().items():
+		# # Optional: filter out built-in/internal variables if needed
+		# if not name.startswith('__'): 
+			# print(f"{name}: {value}, Type: {type(value)}")
 
 ###########################################
 ######
