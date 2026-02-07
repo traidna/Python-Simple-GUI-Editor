@@ -527,6 +527,17 @@ def save_to_db():
 		
 	conn.close()
 
+def write_bash_script():
+	## create a prog.sh file so you can compile without going into app
+	prog=wnentry.get()
+	fn=f'{prog}.sh'
+	with open(fn,"w") as f:
+		f.write(f'rm {prog}.py\n')
+		f.write(f'cat {prog}*.py > {prog}.py\n')
+		f.close()
+		 
+
+
 
 ## write the application
 def write_widget_code():
@@ -542,10 +553,23 @@ def write_widget_code():
 		f.write("import tkinter.font as tkFont\n")
 		f.write("import platform\n\n")
 		f.close()
+	
+	## creat a modules files with blakn def myinit()
+	## user can edit this file to :
+	## 1. add code to run when program starts
+	## 2. add more functions that will be at top of file
+	
+	fn=f'{wnentry.get()}_amodules.py'
+	if not os.path.isfile(fn):
+		with open(fn,"w") as f:
+			f.write("### use Add to do myinit() for run when file starts\n")
+			f.write("def myinit():\n")
+			f.write("\tpass\n")
+			f.close
+			
 		
 		# write out the command= files and imports 
 		for index, c in enumerate(cmdlst):
-				
 			fn=f'{wnentry.get()}_{c.replace("event","").replace("()","")}.py'
 			if c!="":
 				rtnlist.append(fn)
@@ -627,7 +651,7 @@ def write_widget_code():
 			f.write(p2str)
 			f.write("\n\n")
 
-
+		f.write("myinit()\n\n")
 
 		f.write("root.focus_force()\n")
 		f.write("root.mainloop()")
@@ -639,7 +663,8 @@ def write_widget_code():
 		
 		## save window and wigets to database
 		save_to_db()
-
+		write_bash_script()
+		
 
 ## load all the widgets for the selected window from the database
 def loadwidgets(wid):
@@ -816,17 +841,7 @@ def reset_window():
 	win=""
 	widLabel.config(text=f'WID: {str(winid)}')
 	
-	#print("Local Variables:")
-	# for name, value in locals().copy().items():
-		# # Optional: filter out built-in/internal variables if needed
-		# if not name.startswith('__'): 
-			# print(f"{name}: {value}, Type: {type(value)}")
-	
-	# print("Global Variables:")
-	# for name, value in globals().copy().items():
-		# # Optional: filter out built-in/internal variables if needed
-		# if not name.startswith('__'): 
-			# print(f"{name}: {value}, Type: {type(value)}")
+
 
 ###########################################
 ######
